@@ -1,118 +1,170 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
+import { NavigationContainer } from '@react-navigation/native';
 
-import React from 'react';
-import type {PropsWithChildren} from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+import { View, Text, Image, StyleSheet } from 'react-native';
+import { ReactNode, useEffect, useState } from 'react';
+import { GestureHandlerRootView, TouchableOpacity } from 'react-native-gesture-handler';
+import HomeScreen from './Screens/HomeScreen';
+import AddPostScreen from './Screens/AddPostScreen';
+import ProfileScreen from './Screens/ProfileScreen';
+import TopBar from './Components/TopBar';
 
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
+import { RecoilRoot, useRecoilState } from 'recoil';
+import { bottomSheetContent, bottomSheetVisiblity, userdata } from './Recoil/Atom';
+import LoginScreen from './Screens/LoginScreen';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { createStackNavigator } from '@react-navigation/stack';
+import SignupScreen from './Screens/SignUpScreen';
 
-function Section({children, title}: SectionProps): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
+const Stack = createStackNavigator();
+
+//https://cdn-icons-png.flaticon.com/128/2198/2198321.png
+//https://cdn-icons-png.flaticon.com/128/3161/3161837.png
+
+//https://cdn-icons-png.flaticon.com/128/747/747376.png
+
+function App() {
+
   return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
+    <RecoilRoot>
+      <MainPage />
+
+    </RecoilRoot>
   );
 }
 
-function App(): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
+function MainPage() {
+  const [currentPage, setcurrentPage] = useState(0);
 
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  };
+  const [BottomSheetView, setBottomSheetView] = useRecoilState(bottomSheetContent);
+  const [BottomSheetVisiblity, setBottomSheetVisibility] = useRecoilState(bottomSheetVisiblity);
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [curruserdata, setuserData] = useRecoilState(userdata)
 
-  return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
+
+  useEffect(() => {
+    getdata()
+
+  }, [])
+
+  const getdata = async () => {
+    var id = await AsyncStorage.getItem('id');
+    var username = await AsyncStorage.getItem('userName');
+    var dplink = await AsyncStorage.getItem('dpLink');
+
+    if (id != null) {
+      console.log("not null")
+      setIsLoggedIn(true)
+
+    setuserData({ id: id, userName: username == null ? "" : username, dpLink: dplink == null ? "" : dplink })
+    }
+    else {
+      console.log("safasf")
+    }
+  }
+
+
+
+  const screens = [<HomeScreen />, <AddPostScreen />, <ProfileScreen />];
+  return <GestureHandlerRootView>
+
+    {isLoggedIn ? <View style={styles.myapp}>
+      <TopBar currentItem={currentPage} setIsLoggedIn={setIsLoggedIn} />
+      <View style={styles.content}>{screens[currentPage]}</View>
+
+      <View style={styles.bottombar}>
+        <TouchableOpacity
+          onPress={() => {
+            setcurrentPage(0);
           }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
-  );
+          <View>
+            <Image
+              source={{
+                uri: 'https://cdn-icons-png.flaticon.com/128/2198/2198321.png',
+              }}
+              style={{ height: 20, width: 20 }}></Image>
+          </View>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => {
+            setcurrentPage(1);
+          }}>
+          <View>
+            <Image
+              source={{
+                uri: 'https://cdn-icons-png.flaticon.com/128/3161/3161837.png',
+              }}
+              style={{ height: 20, width: 20 }}></Image>
+          </View>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => {
+            setcurrentPage(2);
+          }}>
+          <View>
+            <Image
+              source={{
+                uri: 'https://cdn-icons-png.flaticon.com/128/747/747376.png',
+              }}
+              style={{ height: 20, width: 20 }}></Image>
+          </View>
+        </TouchableOpacity>
+      </View>
+      {
+        BottomSheetVisiblity ? <View style={{ height: '100%', width: "100%", backgroundColor: 'rgba(0, 0, 0, 0.5)', position: 'absolute', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: 10 }}>
+          <View style={{ height: 400, width: '100%', backgroundColor: 'white', borderRadius: 10 }}>
+            {BottomSheetView}
+          </View>
+        </View> :
+          <View />
+      }
+
+    </View> :
+
+      <NavigationContainer>
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen name="signup" component={SignupScreen} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    }
+
+  </GestureHandlerRootView>
 }
 
 const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
+  myapp: {
+    height: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'space-between',
   },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
+  topbar: {
+    height: 50,
+    width: '100%',
+    backgroundColor: 'red',
   },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
+  bottombar: {
+    flex: 1,
+    width: '100%',
+
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: 50,
+    paddingTop: 10,
   },
-  highlight: {
-    fontWeight: '700',
+  content: {
+    height: '85%',
+    width: '100%',
+
   },
 });
+
+
+
+
 
 export default App;
